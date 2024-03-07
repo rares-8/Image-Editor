@@ -1,0 +1,137 @@
+Apostol Rares Andrei 311CA
+
+IMAGE EDITOR
+
+    Pentru a rezolva proiectul, am definit doua structuri in care retin
+informatii legate de imagini: inaltimea, latimea, valoarea maxima a culorilor,
+matricea asociata si tipul pozei. Pentru pozele de tip PGM, am folosit
+structura PGM_pic, iar pentru pozele PPM am folosit structura PPM_pic. In plus,
+pentru pozele PPM, matricea este formata din structuri RGB, care retin valorile
+pentru culorile rosu, verde si albastru.
+    In memoria programului este alocata la un moment dat un singur tip de poza.
+
+Operatiile implementate sunt:
+
+1. LOAD <fisier>
+
+    Daca se introduce comanda LOAD, poza din fisier se pastreaza in memorie.
+Pentru a retine informatiile despre imagine, deschid fisierul in mod text si
+citesc tipul pozei(P2, P3, P5 sau P6), dupa care inchid fisierul. In functie de
+tipul pozei, programul se duce in una din functiile definite. Pentru pozele
+greyscale ASCII, fisierul se redeschide text si se citeste headerul. Se aloca
+o matrice si se citeste din fisier. Pentru pozele color functia este
+asemanatoare, doar ca se aloca o matrice RGB si se citesc cele trei valori ale
+culorilor una dupa alta. Pentru fisierele binare, se redeschide fisierul in mod
+binar si se citeste matricea cu fread.
+    In cazul in care exista comentarii intre magic word si dimensiunile
+matricii, acestea se ignora, prin functia ignore_comments(am facut o cate o
+functie pentru fiecare tip de fisier, binar sau text). Functia citeste doua
+caractere din fisier, si verifica daca primul este '#'. Procesul se repeta pana
+cand primul caracter citit este diferit de '#', si atunci se revine cu cursorul
+cu doua poziti in urma.
+    La intrarea in LOAD, in cazul in care este alocata o matrice inainte
+aceasta se elibereaza. Deci daca operatia de LOAD esueaza, programul revine la
+starea in care nicio matrice nu este incarcata in memorie.
+    In plus, la LOAD se face si selectul default: sunt initializate variabilele
+care retin matricea selectata(in cazul LOAD, toata matricea incarcata).
+
+2. SELECT <x1> <y1> <x2> <y2>
+
+    Inainte de a incepe comanda SELECT, am verificat daca a fost introdusa in
+mod corespunzator: daca are 4 parametrii si daca acestia sunt numere. Am
+verificat daca numerele sunt valide si daca se poate face selectia respectiva,
+si in caz afirmativ am pus valorile lor in structura corespunzatoare pozei
+alocate.
+
+3. SELECT ALL
+
+    Pentru comanda SELECT ALL, am verificat ce tip de poza este incarcata in
+memorie si am actualizat informatiile cu privire la selectie: este selectata
+intreaga inaltime si lungime a pozei.
+
+4. HISTOGRAM <x> <y>
+
+    Dupa ce am verificat daca comanda a fost introdusa in mod corespunzator,
+am calculat numarul de aparitii al fiecarui pixel in poza si am retinut acest
+numar intr-un vector de frecventa. Pentru a afla cate valori trebuie grupate
+impreuna astfel incat sa rezulte un numar dat de binuri, am facut suma pentru
+valorile care trebuiesc grupate si le-am pastrat in alt vector. Dupa aceea,
+calculeaz numarul maxim de aparitii din noul vector si aplic formula data.
+
+5. EQUALIZE
+
+    Pentru EQUALIZE, folosesc aceeasi functie de la histograma pentru a calcula
+numarul de aparitii al fiecarui pixel in matrice, dupa care aplic formula:
+calculez suprafata imaginii, suma, si pun noua valoare a pixelului in matrice.
+
+6. CROP
+
+    CROP functioneaza asemanator pentru imaginile color si cele greyscale: se
+aloca o matrice noua, pe dimensiunile selectiei, si se copiaza in aceasta
+valorile din submatricea selectata. Se elibereaza matricea veche, se
+actualizeaza dimensiunile si selectia, si matricea noua se duce in locul celei
+vechi.
+
+7. APPLY <PARAMETRU>
+
+    Pentru APPLY, verific daca comanda a fost introdusa corespunzator si daca
+parametrul este unul cunoscut. In functie de efectul dorit, kernelul se
+initializeaza cu valorile potrivite. Pixelii care nu au suficienti vecini
+pentru aplicare algoritmului (cei din margine), sunt ignorati: verific
+daca parametrii pentru selectie se afla in margine, si daca sunt, ii mut
+cu un pixel langa margine.
+    Pentru aplicarea efectului, aloc o matrice noua, copiez in ea valorile din
+poza originala, dupa care parcurg numai submatricea selectata. Fac pe rand
+suma vecinilor pentru toate cele trei valori(R, G, B), si le pun in matricea
+noua. Dupa aceea, copiez in submatricea selectata valorile noi ale pixelilor,
+si eliberez matricea alocata.
+
+8. SAVE <nume_fisier> |ascii|
+
+    Pentru SAVE, verific daca apare parametrul ascii si ce tip de poza este
+incarcata in memorie. Daca este prezent parametrul ascii, deschid un fisier
+in mod text, scriu headerul, dupa care matricea. Daca nu apare parametrul
+ascii, atunci deschid un fisier binar, scriu headerul, dupa care matricea,
+cu fwrite.
+
+9. EXIT
+
+    La EXIT, verific daca a fost pastrata anterior cel putin o poza in memorie.
+Daca nu a fost, atunci nu se poate iesi din program. Altfel, verific ce tip
+de poza este incarcata in memorie, o eliberez, si ies din subprogram.
+
+10. ROTATE <unghi>
+
+    Algoritmul de rotate functioneaza asemanator pentru pozele greyscale si
+cele color: se verifica daca selectia este patrata sau daca este selectata
+toata imaginea. Daca unghiul este 0 sau +-360, atunci se afiseaza mesajul de
+rotire, pentru ca aceste unghiuri nu afecteaza imaginea. Daca unghiul nu este
+divizibil cu 90 atunci se afiseaza un mesaj si se iese din program.
+    Daca unghiul este divizibil cu 90, atunci exista doua cazuri: > 0 sau < 0.
+Pentru un unghi mai mic decat 0, nu mai este necesar niciun calcul, si se
+apeleaza de cate ori este nevoie functia de rotire pentru -90 de grade.
+    Subprogramul de rotate -90 functioneaza in felul urmator: se aloca o
+matrice noua, cu dimensiunile submatricei selectate, si se copiaza in aceasta
+matricea selectata. Pentru aceasta matrice, se calculeaza transpusa. Daca
+este selectata intreaga imagine, atunci trebuie sa se faca un swap intre
+dimensiuni, sa se realoce matricea pe noile dimensiuni si sa se actualizeze
+variabilele de selectie. Daca nu este selectata toata imaginea, nu apare
+aceasta problema. Cu transpusa calculata, se parcurg coloanele pe rand, se
+pastreaza elementele intr-un vector si se pun inapoi in matrice in ordine
+inversa. Dupa asta, se copiaza matricea rotita peste locul ei original.
+    Daca unghiul este pozitiv, am observat ca se poate folosi functia de
+rotate -90, deoarece un rotate de +90 de grade este egal cu 3 rotate-uri
+de -90. De asemenea, am observat ca daca impart unghiul la 30 obtin numarul
+de rotiri necesare (de exemplu, pentru 270: 270 / 30 = 9, sunt necesare
+9 rotiri).
+    Rotate este asemanator pentru imagini greyscale si color, singura diferenta
+este ca pentru imaginile color se lucreaza cu 3 valori ale unui pixel.
+
+Organizarea pe fisiere:
+
+    In functions.c se gasesc functiile auxiliare, care verifica daca se pot
+executa diverse operatii, daca comenziile au fost alocate corect, si functii
+care executa pasi intermediari in rezolvare: spre exemplu calcularea
+transpusei, pentru a fi utilizata in functia rotate. In commands.c se
+gasesc functiile pentru executarea comenzilor. In structs.h am pus structurile
+pentru imagini
